@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Aljoscha Greim <aljoscha@bembelbytes.com>
+# MIT License
+
 from dataclasses import dataclass
 
 # Pitch: positive values are pitch up
@@ -26,10 +29,26 @@ class Camper:
             self.bank = bank
             # Total incline as combination of pitch and bank
             self.total: float = (pitch**2 + bank**2)**0.5
+        
+        def __str__(self) -> str:
+            return "Ramps:\n" \
+                   "  FL: {:3d}%, FR: {:3d}%\n" \
+                   "  RL: {:3d}%, RR: {:3d}%\n" \
+                   "\n" \
+                   "Attitude:\n" \
+                   "  Pitch: {:+3.1f}°\n" \
+                   "  Bank:  {:+3.1f}°".format(
+                    int(self.ramps[0] * 100),
+                    int(self.ramps[1] * 100),
+                    int(self.ramps[2] * 100),
+                    int(self.ramps[3] * 100),
+                    self.pitch,
+                    self.bank
+                )
 
     def __init__(self, pitch_per_ramp:float = 0.0, bank_per_ramp: float = 0.0, n_ramps: int = N_RAMPS):
-        self.pitch_per_ramp = pitch_per_ramp
-        self.bank_per_ramp = bank_per_ramp
+        self._pitch_per_ramp = pitch_per_ramp
+        self._bank_per_ramp = bank_per_ramp
         self.n_ramps = n_ramps
 
         # Save initial attitude
@@ -38,8 +57,8 @@ class Camper:
     def __str__(self) -> str:
         best_attitude = self.best_attitude
         return "RAMPS:\n" \
-               "Front:   {:4.2f} | {:4.2f}\n" \
-               "Rear:    {:4.2f} | {:4.2f}\n\n" \
+               "Front:   {:3d}% | {:3d}%\n" \
+               "Rear:    {:3d}% | {:3d}%\n\n" \
                "\n" \
                "ATTITUDE:\n" \
                "       BEFORE | AFTER\n" \
@@ -48,10 +67,10 @@ class Camper:
                "Total:  {:+3.1f}° | {:+3.1f}°\n\n" \
                "\n" \
                "CORRECTION:      {:3d}%".format(
-                best_attitude.ramps[0],
-                best_attitude.ramps[1],
-                best_attitude.ramps[2],
-                best_attitude.ramps[3],
+                int(best_attitude.ramps[0] * 100),
+                int(best_attitude.ramps[1] * 100),
+                int(best_attitude.ramps[2] * 100),
+                int(best_attitude.ramps[3] * 100),
                 self._initial_attitude.pitch,
                 best_attitude.pitch,
                 self._initial_attitude.bank,
@@ -118,10 +137,10 @@ class Camper:
 
                                 # Calculate resulting pitch and bank and append the resulting attitude to the list
                                 # of possible attitudes
-                                new_pitch = self.pitch - self.pitch_per_ramp * (
+                                new_pitch = self.pitch - self._pitch_per_ramp * (
                                     new_ramps[0] + new_ramps[1] - new_ramps[2] - new_ramps[3]
                                 )
-                                new_bank = self.bank - self.bank_per_ramp * (
+                                new_bank = self.bank - self._bank_per_ramp * (
                                     -new_ramps[0] + new_ramps[1] - new_ramps[2] + new_ramps[3]
                                 )
                                 possible_attitudes.append(Camper.Attitude(new_ramps, new_pitch, new_bank))
@@ -152,8 +171,11 @@ if __name__ == "__main__":
 
     camper=Camper(MY_PITCH_PER_RAMP, MY_BANK_PER_RAMP)
 
+    print("Enter the attitude of your RV without any ramps below your wheels")
+
     camper.pitch = float(input("Pitch (+ is nose up): "))
     camper.bank = float(input("Bank (+ is right side low): "))
     
     print()
     print(camper)
+    camper._pitch_per_ramp
