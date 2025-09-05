@@ -1,11 +1,11 @@
 # CamperLevel
 This script can be used to calculate the optimal positions of leveling ramps to level the RV.
 
-## Preparation
+## 1 Preparation
 Before being able to use this script, you need to evaluate two values that are specific to your combination of leveling ramps and RV.
 Place your RV with **one** wheel to the top position of your ramp and note the effect on your RVs pitch and bank in ° [degrees].
 
-## Usage
+## 2 Usage
 The script can either be used directly by executing the file or ist can be imported as a python module and executed by using the `Camper` class.  
 Pitch and bank values are expressed in degrees where positive pitch values corresponds to a nose high (front of car higher than the tail) and positive bank values corresponds to an incline to the right (right side of car lower than left side).
 
@@ -23,14 +23,14 @@ Pitch (+ is nose up): 0.8
 Bank (+ is right side low): -0.3
 
 RAMPS:
-Front:   0.47 | 0.07
-Rear:    0.00 | 0.00
+Front:     0% |   0%
+Rear:     59% |  39%
 
 
 ATTITUDE:
        BEFORE | AFTER
 Pitch:  +0.8° | +0.0°
-Bank:   -0.3° | +0.0°
+Bank:   -0.3° | -0.0°
 Total:  +0.9° | +0.0°
 
 
@@ -53,9 +53,27 @@ camper.bank = 0.2
 
 # Get best possible attitude after applying the ramps
 print(camper.best_attitude)
+
+"""
+Ramps:
+  FL:  91%, FR:  99%
+  RL:   0%, RR:   0%
+
+Attitude:
+  Pitch: -0.2°
+  Bank:  +0.1°
+"""
 ```
 
-## License
+## 3 Changelog
+### V1.0.0
+Initial Release
+
+### V1.0.1
+- Bugfix in calculation of best attitude
+- Refactoring
+
+## 4 License
 Copyright (c) 2025 Aljoscha Greim aljoscha@bembelbytes.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
