@@ -7,12 +7,11 @@ from dataclasses import dataclass
 # Bank: positive values are bank right
 
 class Camper:
-
     # Default values
     N_RAMPS: int = 2
     N_TYRES: int = 4
 
-    # Calculation tuning
+    # Calculation values
     INITIAL_INCREMENT: float = 1.0
     ITERATIONS: int = 5
 
@@ -45,6 +44,16 @@ class Camper:
                     self.pitch,
                     self.bank
                 )
+    
+        def __eq__(self, other: object) -> bool:
+            return self.ramps == other.ramps and self.pitch == other.pitch and self.bank == other.bank
+        
+        def __lt__ (self, other: object) -> bool:
+            return self.total < other.total
+        
+        def __gt__ (self, other: object) -> bool:
+            return self.total > other.total
+
 
     def __init__(self, pitch_per_ramp:float = 0.0, bank_per_ramp: float = 0.0, n_ramps: int = N_RAMPS):
         self._pitch_per_ramp = pitch_per_ramp
@@ -116,47 +125,66 @@ class Camper:
             while True:
                 # Increment will be 1/10 fi initial increment each following iteration
                 increment = Camper.INITIAL_INCREMENT / (10**iteration)
-
-                possible_attitudes = []
-
-                # Find all possible attitudes using the any combination of modification of the ramps
-                # Take each tire
-                for tire in range(Camper.N_TYRES):
-
-                    # Check for increasing and decreasing the amount of ramp used oh this tire
-                    for sign in [1, -1]:
-                        new_ramps = attitude.ramps[:]
-                        # Modify the amount of ramp used by this tire
-                        new_ramps[tire] += increment * sign
-
-                        # Check if only the available number of ramps used
-                        if Camper.N_TYRES - new_ramps.count(0.0) <= self.n_ramps:
-
-                            # Check if ramp usage factor is between 0.0 and 1.0
-                            if not any(ramp < 0.0 or ramp > 1.0 for ramp in new_ramps):
-
-                                # Calculate resulting pitch and bank and append the resulting attitude to the list
-                                # of possible attitudes
-                                new_pitch = self.pitch - self._pitch_per_ramp * (
-                                    new_ramps[0] + new_ramps[1] - new_ramps[2] - new_ramps[3]
-                                )
-                                new_bank = self.bank - self._bank_per_ramp * (
-                                    -new_ramps[0] + new_ramps[1] - new_ramps[2] + new_ramps[3]
-                                )
-                                possible_attitudes.append(Camper.Attitude(new_ramps, new_pitch, new_bank))
                 
-                # Sort all possible attitudes by total incline and take the best of all possible attitudes
-                best = sorted(possible_attitudes, key=lambda x: x.total)[0]
+                # Get attitude with the smallest total error
+                best = min(self._get_possible_attitudes(attitude, increment))
 
                 # Use new attitude if the total incline is less than the current or start the next iteration using
                 # smaller increments to further refine the best possible attitude
-                if best.total < attitude.total:
+                if best < attitude:
                     attitude = best
                 else:
                     break
         
         # Return the best possible attitude that can be achieved using the available ramps
         return attitude
+    
+    def _get_possible_attitudes(self, attitude: Attitude, increment: float) -> list[Attitude]:
+        # Find all possible attitudes that can be reached from the current attitude using the given increment
+        possible_attitudes = []
+
+        # Take each tire
+        for tire in range(Camper.N_TYRES):
+
+            # Check for increasing and decreasing the amount of ramp used oh this tire
+            for sign in [1, -1]:
+                new_ramps = attitude.ramps[:]
+                # Modify the amount of ramp used by this tire
+                new_ramps[tire] += increment * sign
+
+                # Delete diagonal corrections as they don't have any effect on the attitude
+                if new_ramps[0] != 0.0 and new_ramps[3] != 0.0:
+                    correction = min(new_ramps[0], new_ramps[3])
+                    new_ramps[0] -= correction
+                    new_ramps[3] -= correction
+
+                if new_ramps[1] != 0.0 and new_ramps[2] != 0.0:
+                    correction = min(new_ramps[1], new_ramps[2])
+                    new_ramps[1] -= correction
+                    new_ramps[2] -= correction
+
+                # Check if only the available number of ramps used
+                if Camper.N_TYRES - new_ramps.count(0.0) > self.n_ramps:
+                    break
+
+                # Check if ramp usage factor is between 0.0 and 1.0
+                if any(ramp < 0.0 or ramp > 1.0 for ramp in new_ramps):
+                    break
+
+                # Calculate resulting pitch and bank and append the resulting attitude to the list
+                # of possible attitudes
+                new_pitch = self.pitch + self._pitch_per_ramp * (
+                    new_ramps[0] + new_ramps[1] - new_ramps[2] - new_ramps[3]
+                )
+                new_bank = self.bank + self._bank_per_ramp * (
+                    new_ramps[0] - new_ramps[1] + new_ramps[2] - new_ramps[3]
+                )
+                new_attitude = Camper.Attitude(new_ramps, new_pitch, new_bank)
+                
+                if new_attitude not in possible_attitudes:
+                    possible_attitudes.append(new_attitude)
+        
+        return possible_attitudes
 
     def _get_correction(self) -> float:
         try:
@@ -166,16 +194,28 @@ class Camper:
 
 
 if __name__ == "__main__":
-    MY_PITCH_PER_RAMP = 1.5
-    MY_BANK_PER_RAMP = 0.75
+    MY_PITCH_PER_RAMP = 0.8
+    MY_BANK_PER_RAMP = 1.5
+
+    def get_float(query="Enter a number: ", error_msg="Invalid Entry!", blank_is_zero=True) -> float:
+        while True:
+            user_input = input(query)
+            if user_input == "" and blank_is_zero:
+                return 0.0
+
+            try:
+                return float(user_input)
+            except ValueError:
+                print(error_msg)
+                pass
+
 
     camper=Camper(MY_PITCH_PER_RAMP, MY_BANK_PER_RAMP)
 
     print("Enter the attitude of your RV without any ramps below your wheels")
-
-    camper.pitch = float(input("Pitch (+ is nose up): "))
-    camper.bank = float(input("Bank (+ is right side low): "))
-    
+    camper.pitch = get_float("Pitch (+ is nose up): ")
+    camper.bank = get_float("Bank (+ is right side low): ")
+            
     print()
     print(camper)
     camper._pitch_per_ramp
