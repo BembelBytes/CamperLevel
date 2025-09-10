@@ -187,17 +187,37 @@ class Camper:
         return possible_attitudes
 
     def _get_correction(self) -> float:
+        # Get amount of correction that could be applied using the available ramps
         try:
             return (1 - (self.best_attitude.total / self.initial_attitude.total))
         except ZeroDivisionError:
             return 1.0
+        
+    def cli_get_ramp_effect(self) -> None:
+        # Ask the user via the command line to enter the RVs attitude without ramps and with one ramp at the LF wheel
+        print("Enter the attitude of your RV without any ramps below your wheels")
+        pitch_initial = Camper.get_float("Pitch (+ is nose up): ")
+        bank_initial = Camper.get_float("Bank (+ is right side low): ")
 
+        print("Place your RV's left front wheel at the highest postion of your ramp")
+        pitch_ramp_lf = Camper.get_float("Pitch (+ is nose up): ")
+        bank_ramp_lf = Camper.get_float("Bank (+ is right side low): ")
 
-if __name__ == "__main__":
-    MY_PITCH_PER_RAMP = 0.8
-    MY_BANK_PER_RAMP = 1.5
+        # Save the effect of one ramp
+        self._pitch_per_ramp = pitch_ramp_lf - pitch_initial
+        self._bank_per_ramp = bank_ramp_lf - bank_initial
+        
+    def cli_get_ramp_positions(self) -> None:
+        # Ask the user via the command line for the current attitude ad provide ramp positions for the best possible
+        # attitude correction
+        print("Enter the attitude of your RV without any ramps below your wheels")
+        self.pitch = Camper.get_float("Pitch (+ is nose up): ")
+        self.bank = Camper.get_float("Bank (+ is right side low): ")
+        print(self)
 
+    @staticmethod
     def get_float(query="Enter a number: ", error_msg="Invalid Entry!", blank_is_zero=True) -> float:
+        # Get a float from the user via the command line
         while True:
             user_input = input(query)
             if user_input == "" and blank_is_zero:
@@ -210,12 +230,11 @@ if __name__ == "__main__":
                 pass
 
 
-    camper=Camper(MY_PITCH_PER_RAMP, MY_BANK_PER_RAMP)
+if __name__ == "__main__":
+    # Preset ramp effect values
+    # CHANGE THESE VALUES ACCORDING TO YOUR RV/RAMP COMBINATION
+    MY_PITCH_PER_RAMP = 0.8
+    MY_BANK_PER_RAMP = 1.5
 
-    print("Enter the attitude of your RV without any ramps below your wheels")
-    camper.pitch = get_float("Pitch (+ is nose up): ")
-    camper.bank = get_float("Bank (+ is right side low): ")
-            
-    print()
-    print(camper)
-    camper._pitch_per_ramp
+    camper=Camper(MY_PITCH_PER_RAMP, MY_BANK_PER_RAMP)
+    camper.cli_get_ramp_positions()

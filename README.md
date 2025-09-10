@@ -48,30 +48,33 @@ from camper import Camper
 camper = Camper(0.5, 1.25)
 
 # Enter pitch and bank values without ramps applied
-camper.pitch = -1.2
-camper.bank = 0.2
+camper.pitch = -0.6
+camper.bank = 0.3
 
 # Get best possible attitude after applying the ramps
 print(camper.best_attitude)
 
 """
 Ramps:
-  FL:  91%, FR:  99%
+  FL:  48%, FR:  72%
   RL:   0%, RR:   0%
 
 Attitude:
-  Pitch: -0.2°
-  Bank:  +0.1°
+  Pitch: +0.0°
+  Bank:  +0.0°
 """
 ```
 
 ## 3 Changelog
-### V1.0.0
-Initial Release
+### V1.0.2
+- Incorporated cli interface functionality in Camper class
 
 ### V1.0.1
 - Bugfix in calculation of best attitude
 - Refactoring
+
+### V1.0.0
+Initial Release
 
 ## 4 License
 Copyright (c) 2025 Aljoscha Greim aljoscha@bembelbytes.com
